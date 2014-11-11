@@ -403,7 +403,7 @@ MessageModel::StatusCode MessageModel::sendMessages(const QList<SendMessagesReci
         {
             LOCK(wallet->cs_wallet);
 
-            boost::unordered_map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
+            std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
 
             // Check if we have a new address or an updated label
             if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)

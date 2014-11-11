@@ -71,14 +71,13 @@ public:
                                   QString::fromStdString(address.ToString())));
             }
 
-            //std::set<CStealthAddress>::iterator it;
-            //for (it = wallet->stealthAddresses.begin(); it != wallet->stealthAddresses.end(); ++it)
-	    BOOST_FOREACH(const CStealthAddress& it, wallet->stealthAddresses)
+            std::set<CStealthAddress>::iterator it;
+            for (it = wallet->stealthAddresses.begin(); it != wallet->stealthAddresses.end(); ++it)
             {
-                bool fMine = !(it.scan_secret.size() < 1);
+                bool fMine = !(it->scan_secret.size() < 1);
                 cachedAddressTable.append(AddressTableEntry(fMine ? AddressTableEntry::Receiving : AddressTableEntry::Sending,
-                                  QString::fromStdString(it.label),
-                                  QString::fromStdString(it.Encoded()),
+                                  QString::fromStdString(it->label),
+                                  QString::fromStdString(it->Encoded()),
                                   true));
             };
         }
@@ -481,7 +480,7 @@ QString AddressTableModel::labelForAddress(const QString &address) const
             if (!sxAddr.SetEncoded(sAddr))
                 return QString();
             
-            boost::container::flat_set<CStealthAddress>::iterator it;
+            std::set<CStealthAddress>::iterator it;
             it = wallet->stealthAddresses.find(sxAddr);
             if (it == wallet->stealthAddresses.end())
                 return QString();
@@ -490,7 +489,7 @@ QString AddressTableModel::labelForAddress(const QString &address) const
         } else
         {
             CBitcoinAddress address_parsed(sAddr);
-            boost::unordered_map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
+            std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
             if (mi != wallet->mapAddressBook.end())
             {
                 return QString::fromStdString(mi->second);

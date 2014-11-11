@@ -29,7 +29,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     int64_t nDebit = wtx.GetDebit();
     int64_t nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash(), hashPrev = 0;
-    boost::container::flat_map<std::string, std::string> mapValue = wtx.mapValue;
+    std::map<std::string, std::string> mapValue = wtx.mapValue;
     
     char cbuf[256];
     

@@ -71,16 +71,11 @@ public:
         cachedWallet.clear();
         {
             LOCK2(cs_main, wallet->cs_wallet);
-            /*for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
+            for(std::map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin(); it != wallet->mapWallet.end(); ++it)
             {
                 if(TransactionRecord::showTransaction(it->second))
                     cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it->second));
-            }*/
-	    BOOST_FOREACH(const PAIRTYPE(uint256, CWalletTx)& it, wallet->mapWallet)
-	    {
-		if(TransactionRecord::showTransaction(it.second))
-		    cachedWallet.append(TransactionRecord::decomposeTransaction(wallet, it.second));
-	    }
+            }
         }
     }
 
@@ -96,7 +91,7 @@ public:
             LOCK2(cs_main, wallet->cs_wallet);
 
             // Find transaction in wallet
-            boost::unordered_map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
+            std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
             bool inWallet = mi != wallet->mapWallet.end();
 
             // Find bounds of this transaction in model
@@ -196,7 +191,7 @@ public:
                 TRY_LOCK(wallet->cs_wallet, lockWallet);
                 if(lockWallet && rec->statusUpdateNeeded())
                 {
-                    boost::unordered_map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
+                    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
                     if(mi != wallet->mapWallet.end())
                     {
@@ -216,7 +211,7 @@ public:
     {
         {
             LOCK2(cs_main, wallet->cs_wallet);
-            boost::unordered_map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
+            std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
             if(mi != wallet->mapWallet.end())
             {
                 return TransactionDesc::toHTML(wallet, mi->second);

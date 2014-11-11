@@ -394,7 +394,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
                 wallet->UpdateStealthAddress(strAddress, strLabel, true);
             } else
             {
-                boost::unordered_map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
+                std::map<CTxDestination, std::string>::iterator mi = wallet->mapAddressBook.find(dest);
                 
                 // Check if we have a new address or an updated label
                 if (mi == wallet->mapAddressBook.end() || mi->second != strLabel)

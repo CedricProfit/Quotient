@@ -271,7 +271,7 @@ Value getaccount(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Quotient address");
 
     string strAccount;
-    boost::unordered_map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
+    std::map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
     if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
         strAccount = (*mi).second;
     return strAccount;
@@ -349,7 +349,7 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             "in past transactions");
 
     Array jsonGroupings;
-    boost::container::flat_map<CTxDestination, int64_t> balances = pwalletMain->GetAddressBalances();
+    std::map<CTxDestination, int64_t> balances = pwalletMain->GetAddressBalances();
     BOOST_FOREACH(set<CTxDestination> grouping, pwalletMain->GetAddressGroupings())
     {
         Array jsonGrouping;

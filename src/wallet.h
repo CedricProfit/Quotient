@@ -10,10 +10,6 @@
 
 #include <stdlib.h>
 
-#include <boost/container/flat_set.hpp>
-#include <boost/container/flat_map.hpp>
-#include <boost/unordered_map.hpp>
-#include <boost/container/set.hpp>
 
 #include "main.h"
 #include "key.h"
@@ -33,8 +29,8 @@ class CReserveKey;
 class COutput;
 class CCoinControl;
 
-typedef boost::container::flat_map<CKeyID, CStealthKeyMetadata> StealthKeyMetaMap;
-typedef boost::container::flat_map<std::string, std::string> mapValue_t;
+typedef std::map<CKeyID, CStealthKeyMetadata> StealthKeyMetaMap;
+typedef std::map<std::string, std::string> mapValue_t;
 
 struct CTxDestinationHasher {
 public:
@@ -61,6 +57,7 @@ public:
 	return a == b;
     }
 };
+
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -128,15 +125,15 @@ public:
     bool fFileBacked;
     std::string strWalletFile;
 
-    boost::container::flat_set<int64_t> setKeyPool;
-    boost::unordered_map<CKeyID, CKeyMetadata, CKeyIDHasher, CKeyIDHasher> mapKeyMetadata;
+    std::set<int64_t> setKeyPool;
+    std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
     
-    boost::container::flat_set<CStealthAddress> stealthAddresses;
+    std::set<CStealthAddress> stealthAddresses;
     StealthKeyMetaMap mapStealthKeyMeta;
     uint32_t nStealth, nFoundStealth; // for reporting, zero before use
 
 
-    typedef boost::container::flat_map<unsigned int, CMasterKey> MasterKeyMap;
+    typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
@@ -162,11 +159,11 @@ public:
         nTimeFirstKey = 0;
     }
 
-    boost::unordered_map<uint256, CWalletTx, Uint256Hasher, Uint256Hasher> mapWallet;
+    std::map<uint256, CWalletTx> mapWallet;
     int64_t nOrderPosNext;
-    boost::container::flat_map<uint256, int> mapRequestCount;
+    std::map<uint256, int> mapRequestCount;
 
-    boost::unordered_map<CTxDestination, std::string, CTxDestinationHasher, CTxDestinationHasher> mapAddressBook;
+    std::map<CTxDestination, std::string> mapAddressBook;
 
     CPubKey vchDefaultKey;
     int64_t nTimeFirstKey;
@@ -267,8 +264,8 @@ public:
     int64_t GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
-    boost::container::set< std::set<CTxDestination> > GetAddressGroupings();
-    boost::container::flat_map<CTxDestination, int64_t> GetAddressBalances();
+    std::set< std::set<CTxDestination> > GetAddressGroupings();
+    std::map<CTxDestination, int64_t> GetAddressBalances();
 
     bool IsMine(const CTxIn& txin) const;
     int64_t GetDebit(const CTxIn& txin) const;
@@ -349,7 +346,7 @@ public:
     {
         {
             LOCK(cs_wallet);
-            boost::container::flat_map<uint256, int>::iterator mi = mapRequestCount.find(hash);
+            std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
             if (mi != mapRequestCount.end())
                 (*mi).second++;
         }
