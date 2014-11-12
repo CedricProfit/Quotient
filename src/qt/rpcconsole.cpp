@@ -38,7 +38,7 @@ const struct {
 
 
 
-#include "rpcconsole.moc"
+/*#include "rpcconsole.moc"*/
 
 void RPCExecutor::start()
 {

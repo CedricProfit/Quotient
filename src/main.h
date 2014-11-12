@@ -918,6 +918,14 @@ public:
             return GetPoWHash();
     }
 
+    uint256 GetHash(bool isPos) const
+    {
+	if(isPos)
+	    return GetPoSHash();
+	else
+            return GetPoWHash();
+    }
+
     uint256 GetPoSHash() const
     {
         return Hashblake(BEGIN(nVersion), END(nNonce));
@@ -1418,7 +1426,7 @@ public:
         block.nBits           = nBits;
         block.nNonce          = nNonce;
 
-        const_cast<CDiskBlockIndex*>(this)->blockHash = block.GetHash();
+        const_cast<CDiskBlockIndex*>(this)->blockHash = block.GetHash(IsProofOfStake());
 
         return blockHash;
     }
