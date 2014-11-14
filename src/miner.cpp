@@ -495,7 +495,10 @@ bool CheckStake(CBlock* pblock, CWallet& wallet)
 
     // verify hash target and signature of coinstake tx
     if (!CheckProofOfStake(pblock->vtx[1], pblock->nBits, proofHash, hashTarget))
+    {
+	printf("miner CheckStake() failed\n");
         return error("CheckStake() : proof-of-stake checking failed");
+    }
 
     //// debug print
     printf("CheckStake() : new proof-of-stake block found  \n  hash: %s \nproofhash: %s  \ntarget: %s\n", hashBlock.GetHex().c_str(), proofHash.GetHex().c_str(), hashTarget.GetHex().c_str());

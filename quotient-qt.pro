@@ -5,6 +5,7 @@ INCLUDEPATH += src src/json src/qt src/qt/plugins/mrichtexteditor
 DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE
 CONFIG += no_include_pwd
 CONFIG += thread
+QT += printsupport network script
 
 greaterThan(QT_MAJOR_VERSION, 4) {
     QT += widgets
@@ -250,7 +251,11 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/plugins/mrichtexteditor/mrichtextedit.h \
     src/qt/qvalidatedtextedit.h \
     src/qt/consolepage.h \
-    src/qt/qwirepage.h
+    src/qt/qwirepage.h \
+    src/qt/qcustomplot.h \
+    src/qt/quantpage.h \
+    src/qt/profitexplorerpage.h \
+    src/qt/tabbedconsolepage.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -331,7 +336,11 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/stealth.cpp \
     src/blake.c \
     src/qt/consolepage.cpp \
-    src/qt/qwirepage.cpp
+    src/qt/qwirepage.cpp \
+    src/qt/qcustomplot.cpp \
+    src/qt/quantpage.cpp \
+    src/qt/profitexplorerpage.cpp \
+    src/qt/tabbedconsolepage.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc \
@@ -355,7 +364,10 @@ FORMS += \
     src/qt/forms/sendmessagesdialog.ui \
     src/qt/plugins/mrichtexteditor/mrichtextedit.ui \
     src/qt/forms/consolepage.ui \
-    src/qt/forms/qwirepage.ui
+    src/qt/forms/qwirepage.ui \
+    src/qt/forms/quantpage.ui \
+    src/qt/forms/profitexplorerpage.ui \
+    src/qt/forms/tabbedconsolepage.ui
 
 contains(USE_QRCODE, 1) {
 HEADERS += src/qt/qrcodedialog.h

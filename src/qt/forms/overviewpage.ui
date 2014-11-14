@@ -14,7 +14,7 @@
    <string>Form</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">#OverviewPage { color: #ffffff; }</string>
+   <string notr="true">#OverviewPage { color: #ffffff; } QToolTip { border: 1px solid black; background-color: #44CA0C; color: black; }</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1">
    <item>

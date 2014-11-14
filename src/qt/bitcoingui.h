@@ -21,6 +21,9 @@ class Notificator;
 class RPCConsole;
 class ConsolePage;
 class QWirePage;
+class QuantPage;
+class ProfitExplorerPage;
+class TabbedConsolePage;
 
 QT_BEGIN_NAMESPACE
 class QLabel;
@@ -94,8 +97,10 @@ private:
     MessagePage *messagePage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
-    ConsolePage *consolePage;
+    TabbedConsolePage *consolePage;
     QWirePage *qwirePage;
+    QuantPage *quantPage;
+    ProfitExplorerPage *profitExplorerPage;
 
     ActiveLabel *labelEncryptionIcon;
     QLabel *labelStakingIcon;
@@ -130,6 +135,8 @@ private:
     QAction *openRPCConsoleAction;
     QAction *consolePageAction;
     QAction *qwirePageAction;
+    QAction *quantPageAction;
+    QAction *profitExplorerPageAction;
 
     QSystemTrayIcon *trayIcon;
     Notificator *notificator;
@@ -193,6 +200,10 @@ private slots:
     void gotoConsolePage();
     /** Switch to the QWire page */
     void gotoQWirePage();
+    /** Switch to the Quant page */
+    void gotoQuantPage();
+    /** Switch to the ProfitExplorer page */
+    void gotoProfitExplorerPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

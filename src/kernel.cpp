@@ -214,7 +214,7 @@ static bool GetKernelStakeModifier(uint256 hashBlockFrom, uint64_t& nStakeModifi
 {
     nStakeModifier = 0;
     if (!mapBlockIndex.count(hashBlockFrom))
-        return error("GetKernelStakeModifier() : block not indexed");
+        return error("GetKernelStakeModifier() : block not indexed: %s", hashBlockFrom.ToString().c_str());
     const CBlockIndex* pindexFrom = mapBlockIndex[hashBlockFrom];
     nStakeModifierHeight = pindexFrom->nHeight;
     nStakeModifierTime = pindexFrom->GetBlockTime();
@@ -290,6 +290,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
     
     if (!GetKernelStakeModifier(hashBlockFrom, nStakeModifier, nStakeModifierHeight, nStakeModifierTime, fPrintProofOfStake))
         return false;
+
     ss << nStakeModifier;
     
     ss << nTimeBlockFrom << nTxPrevOffset << txPrev.nTime << prevout.n << nTimeTx;

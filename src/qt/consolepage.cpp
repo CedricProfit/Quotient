@@ -16,6 +16,13 @@
 
 #include <openssl/crypto.h>
 
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QtScript/QScriptEngine>
+#include <QtScript/QScriptValue>
+#include <QtScript/QScriptValueIterator>
+
 const int CONSOLE_SCROLLBACK = 50;
 const int CONSOLE_HISTORY = 50;
 
@@ -48,6 +55,8 @@ ConsolePage::ConsolePage(QWidget *parent) :
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
     startExecutor();
     clear();
+
+    //connect(&networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onResult(QNetworkReply*)));
 }
 
 ConsolePage::~ConsolePage()
@@ -172,7 +181,51 @@ void ConsolePage::on_lineEdit_returnPressed()
     {
         if(cmd.toStdString() == "clear")
 	{
+	    message(CMD_REQUEST, cmd);
 	    clear();
+	    // Remove command, if already in history
+            history.removeOne(cmd);
+            // Append command to history
+            history.append(cmd);
+            // Enforce maximum history size
+            while(history.size() > CONSOLE_HISTORY)
+                history.removeFirst();
+            // Set pointer to end of history
+            historyPtr = history.size();
+            // Scroll console view to end
+            scrollToEnd();
+	}
+	else if(cmd.toStdString() == "markethistory")
+	{
+	    message(CMD_REQUEST, cmd);
+	    dumpmarkethistory();
+	    // Remove command, if already in history
+            history.removeOne(cmd);
+            // Append command to history
+            history.append(cmd);
+            // Enforce maximum history size
+            while(history.size() > CONSOLE_HISTORY)
+                history.removeFirst();
+            // Set pointer to end of history
+            historyPtr = history.size();
+            // Scroll console view to end
+            scrollToEnd();
+	}
+	else if(cmd.toStdString() == "marketdata")
+	{
+	    message(CMD_REQUEST, cmd);
+	    marketdata();
+	    // Remove command, if already in history
+            history.removeOne(cmd);
+            // Append command to history
+            history.append(cmd);
+            // Enforce maximum history size
+            while(history.size() > CONSOLE_HISTORY)
+                history.removeFirst();
+            // Set pointer to end of history
+            historyPtr = history.size();
+            // Scroll console view to end
+            scrollToEnd();
 	}
 	else
 	{
@@ -235,4 +288,113 @@ void ConsolePage::scrollToEnd()
 {
     QScrollBar *scrollbar = ui->messagesWidget->verticalScrollBar();
     scrollbar->setValue(scrollbar->maximum());
+}
+
+void ConsolePage::dumpmarkethistory()
+{
+    // get market history from empo ex api
+    QUrl url("https://api.empoex.com/markethistory/XQN-BTC");
+    QNetworkRequest request;
+    request.setUrl(url);
+    qDebug() << "dumpmarkethistory()";
+    QNetworkReply* currentReply = networkManager.get(request);
+    connect(currentReply, SIGNAL(finished()), this, SLOT(eeHistoryReplyFinished()));
+}
+
+void ConsolePage::marketdata()
+{
+    // get market history from empo ex api
+    QUrl url("https://api.empoex.com/marketinfo/XQN-BTC");
+    QNetworkRequest request;
+    request.setUrl(url);
+    qDebug() << "dumpmarkethistory()";
+    QNetworkReply* currentReply = networkManager.get(request);
+    connect(currentReply, SIGNAL(finished()), this, SLOT(eeMktDataReplyFinished()));
+}
+
+void ConsolePage::eeMktDataReplyFinished()
+{ 
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    QString data = (QString) reply->readAll();
+    //qDebug() << data;
+    QScriptEngine engine;
+    QScriptValue result = engine.evaluate("value = " + data);
+    // Now parse this JSON according to your needs !
+    //QScriptValue entries = result.property("XQN-BTC");
+    QScriptValueIterator it(result);
+
+//[{"pairname":"XQN-BTC","last":"0.00002400","base_volume_24hr":"0.60486204","low":"0.00000989","high":"0.00002750","bid":"0.00001990",
+//"ask":"0.00002400","open_buy_volume":"87,138.42828095","open_sell_volume":"5,642.11820899",
+//"open_buy_volume_base":"0.25689740","open_sell_volume_base":"0.16165537","change":"+9.14%"}]
+    QString tbl = "<b>EmpoEx XQN-BTC</b><br><br><table cellpadding=\"5\" width=\"100%\"><thead><tr><th></th><th>Last</th><th>% Change</th><th>24hr Volume</th><th>Low</th><th>High</th><th>Bid</th><th>Ask</th></tr></thead>";
+    tbl = tbl + "<tbody>";
+    while (it.hasNext()) {
+        it.next();
+        QScriptValue entry = it.value();
+	QString pairname = entry.property("pairname").toString();
+
+	if(pairname == "XQN-BTC")
+	{
+            QString change = entry.property("change").toString();
+	    QString last = QString::number(entry.property("last").toNumber(), 'f', 8);
+            QString volume = QString::number(entry.property("base_volume_24hr").toNumber(), 'f', 8);
+            QString low = QString::number(entry.property("low").toNumber(), 'f', 8);
+            QString high = QString::number(entry.property("high").toNumber(), 'f', 8);
+            QString bid = QString::number(entry.property("bid").toNumber(), 'f', 8);
+            QString ask = QString::number(entry.property("ask").toNumber(), 'f', 8);
+
+	    tbl = tbl + "<tr><td>";
+	    if(change.startsWith("-"))
+	    {
+		tbl = tbl + "<img src=\":/icons/sad\" width=\"48\" height=\"48\"></td>";
+	    }
+	    else
+	    {
+		tbl = tbl + "<img src=\":/icons/smile\" width=\"48\" height=\"48\"></td>";
+	    }
+            tbl = tbl + "<td>" + last + "</td><td>" + change + "</td><td>" + volume + "</td><td>" + low + "</td><td>" + high + "</td><td>" + bid + "</td><td>" + ask + "</td></tr>";
+	}
+    }
+    tbl = tbl + "</tbody></table>";
+    qDebug() << "Returning market data table";
+    message(CMD_REPLY, tbl, true); 
+}
+
+void ConsolePage::eeHistoryReplyFinished()
+{
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+
+    qDebug() << "eeHistoryReplyFinished()";
+    QString data = (QString) reply->readAll();
+    QScriptEngine engine;
+    QScriptValue result = engine.evaluate("value = " + data);
+    QScriptValueIterator ite(result);
+    while(ite.hasNext()) {
+         ite.next();
+        //qDebug() << ite.name() << ": " << ite.value().toString();
+    }
+
+    // {"XQN-BTC":[{"type":"Buy","date":1415845314,"amount":"142.80000000","price":"0.00002400","total":"0.00342720"},{"type":"Buy","date":1415845120,"amount":"202.98107194","price":"0.00002199","total":"0.00446355"},
+
+    QString tbl = "<b>EmpoEx XQN-BTC</b><br><br><table cellpadding=\"5\" width=\"100%\"><thead><tr><th>Type</th><th>Date</th><th>Amount</th><th>Price</th><th>Total</th></tr></thead>";
+
+    // Now parse this JSON according to your needs !
+    QScriptValue entries = result.property("XQN-BTC");
+    QScriptValueIterator it(entries);
+    
+    tbl = tbl + "<tbody>";
+    while (it.hasNext()) {
+        it.next();
+        QScriptValue entry = it.value();
+        QString type = entry.property("type").toString();
+	QString date = entry.property("date").toString();
+        QString amount = QString::number(entry.property("amount").toNumber(), 'f', 8);
+        QString price = QString::number(entry.property("price").toNumber(), 'f', 8);
+        QString total = QString::number(entry.property("total").toNumber(), 'f', 8);
+
+        tbl = tbl + "<tr><td>" + type + "</td><td>" + date + "</td><td>" + amount + "</td><td>" + price + "</td><td>" + total + "</td></tr>";
+    }
+    tbl = tbl + "</tbody></table>";
+    qDebug() << "Returning market data table";
+    message(CMD_REPLY, tbl, true); 
 }

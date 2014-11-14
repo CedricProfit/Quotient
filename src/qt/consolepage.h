@@ -2,12 +2,17 @@
 #define CONSOLEPAGE_H
 
 #include <QWidget>
+#include <QNetworkAccessManager>
 
 namespace Ui {
     class ConsolePage;
 }
 class ClientModel;
 class RPCExecutor;
+
+QT_BEGIN_NAMESPACE
+class QNetworkAccessManager;
+QT_END_NAMESPACE
 
 /** Local Bitcoin RPC console. */
 class ConsolePage: public QWidget
@@ -20,6 +25,8 @@ public:
 
     void setClientModel(ClientModel *model);
     void entryFocus();
+    void dumpmarkethistory();
+    void marketdata();
 
     enum MessageClass {
         MC_ERROR,
@@ -34,6 +41,8 @@ protected:
 
 private slots:
     void on_lineEdit_returnPressed();
+    void eeHistoryReplyFinished();
+    void eeMktDataReplyFinished();
 
 public slots:
     void clear();
@@ -53,6 +62,7 @@ private:
     ClientModel *clientModel;
     QStringList history;
     int historyPtr;
+    QNetworkAccessManager networkManager;
 
     void startExecutor();
 };
