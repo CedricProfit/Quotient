@@ -2444,8 +2444,17 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         CBlock block;
         {
             LOCK2(cs_main, cs_wallet);
-            if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
-                continue;
+            // wtx.hashBlock
+	    if(mapBlockIndex.find(pcoin.first->hashBlock) == mapBlockIndex.end())
+	    {
+		printf("CWallet::CreateCoinStake: block not indexed block: %s tx: %s", pcoin.first->hashBlock.ToString().c_str(), pcoin.first->GetHash().ToString().c_str());
+		continue;
+	    }
+
+	    //printf("CWallet::CreateCoinStake: Reading block: %s", pcoin.first->hashBlock.ToString().c_str());
+	    block.ReadFromDisk(mapBlockIndex[pcoin.first->hashBlock], true);
+            //if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+            //    continue;
         }
 
         static int nMaxStakeSearchInterval = 60;
@@ -2459,6 +2468,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             // Search nSearchInterval seconds back up to nMaxStakeSearchInterval
             uint256 hashProofOfStake = 0, targetProofOfStake = 0;
             COutPoint prevoutStake = COutPoint(pcoin.first->GetHash(), pcoin.second);
+	    //printf("CWallet::CreateCoinStake: block: %s tx: %s", block.GetHash().ToString().c_str(), pcoin.first->GetHash().ToString().c_str());
             if (CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, *pcoin.first, prevoutStake, txNew.nTime - n, hashProofOfStake, targetProofOfStake))
             {
                 // Found a kernel
@@ -2488,7 +2498,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                     if (!keystore.GetKey(uint160(vSolutions[0]), key))
                     {
                         if (fDebug && GetBoolArg("-printcoinstake"))
-                            printf("CreateCoinStake : failed to get key for kernel type=%d\n", whichType);
+                            printf("CreateCoinStake : failed to getl key for kernel type=%d\n", whichType);
                         break;  // unable to find corresponding public key
                     }
                     scriptPubKeyOut << key.GetPubKey() << OP_CHECKSIG;

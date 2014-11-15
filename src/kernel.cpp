@@ -6,6 +6,7 @@
 
 #include "kernel.h"
 #include "txdb.h"
+#include "init.h"
 
 using namespace std;
 
@@ -278,6 +279,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, unsigned 
     int64_t nValueIn = txPrev.vout[prevout.n].nValue;
 
     uint256 hashBlockFrom = blockFrom.GetHash();
+    //printf("CheckStakeKernelHash: hashBlockFrom: %s", hashBlockFrom.ToString().c_str());
 
     CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)txPrev.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
     targetProofOfStake = (bnCoinDayWeight * bnTargetPerCoinDay).getuint256();
@@ -346,9 +348,30 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     if (!VerifySignature(txPrev, tx, 0, 0))
         return tx.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
 
+    // Get the block hash
+    CTransaction txF;
+    uint256 hashBlockT = 0;
+    uint256 txHash = txPrev.GetHash();
+
+    if (pwalletMain->mapWallet.count(txHash))
+    {
+	hashBlockT = pwalletMain->mapWallet[txHash].hashBlock;
+    }
+    else
+    {
+        GetTransaction(txHash, txF, hashBlockT);
+    }
+
     // Read block header
     CBlock block;
-    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+    //if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+    if(mapBlockIndex.find(hashBlockT) == mapBlockIndex.end())
+    {
+	string errs = "CheckProofOfStake(): block not indexed: " + hashBlockT.ToString() + " tx: " + txPrev.GetHash().ToString();
+	return fDebug? error(errs.c_str()) : false;
+    }
+
+    if(!block.ReadFromDisk(mapBlockIndex[hashBlockT], true))
         return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
 
     if (!CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, txPrev, txin.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, fDebug))

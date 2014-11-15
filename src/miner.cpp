@@ -488,7 +488,7 @@ bool CheckWork(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 bool CheckStake(CBlock* pblock, CWallet& wallet)
 {
     uint256 proofHash = 0, hashTarget = 0;
-    uint256 hashBlock = pblock->GetHash();
+    uint256 hashBlock = pblock->GetHash(true);
 
     if(!pblock->IsProofOfStake())
         return error("CheckStake() : %s is not a proof-of-stake block", hashBlock.GetHex().c_str());
@@ -561,7 +561,7 @@ void StakeMiner(CWallet *pwallet)
             fTryToSync = false;
             if (vNodes.size() < 3 || nBestHeight < GetNumBlocksOfPeers())
             {
-                MilliSleep(60000);
+                MilliSleep(10000);
                 continue;
             }
         }

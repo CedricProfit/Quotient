@@ -882,6 +882,7 @@ int CTxIndex::GetDepthInMainChain() const
 // Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
 {
+    printf("GetTransaction: looking up hash: %s\n", hash.ToString().c_str());
     {
         LOCK(cs_main);
         {
@@ -897,6 +898,8 @@ bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock)
             CBlock block;
             if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
                 hashBlock = block.GetHash();
+
+	    printf("GetTransaction: hashBlock: %s\n", hashBlock.ToString().c_str());
             return true;
         }
     }
