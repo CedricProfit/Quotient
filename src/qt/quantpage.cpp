@@ -65,6 +65,10 @@ void QuantPage::updateChart()
     ui->customPlot->clearGraphs();
     ui->customPlot->clearItems();
 
+    ui->volumePlot->clearPlottables();
+    ui->volumePlot->clearGraphs();
+    ui->volumePlot->clearItems();
+
     double binSize = 900; // bin data in 300 second (5 minute)// 900 second (15 minute) intervals
     // create candlestick chart:
     double startTime = timeData[0];
@@ -81,23 +85,10 @@ void QuantPage::updateChart()
     candlesticks->setPenPositive(QPen(QColor(72, 191, 66)));
     candlesticks->setPenNegative(QPen(QColor(203, 19, 19)));
 
-    // create bottom axis rect for volume bar chart:
-    QCPAxisRect *volumeAxisRect = new QCPAxisRect(ui->customPlot);
-
-    if(ui->customPlot->plotLayout()->hasElement(1, 0))
-      ui->customPlot->plotLayout()->take(ui->customPlot->plotLayout()->element(1, 0));
-
-    ui->customPlot->plotLayout()->addElement(1, 0, volumeAxisRect);
-    volumeAxisRect->setMaximumSize(QSize(QWIDGETSIZE_MAX, 100));
-    volumeAxisRect->axis(QCPAxis::atBottom)->setLayer("axes");
-    volumeAxisRect->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
-    // bring bottom and main axis rect closer together:
-    ui->customPlot->plotLayout()->setRowSpacing(0);
-    volumeAxisRect->setAutoMargins(QCP::msLeft|QCP::msRight|QCP::msBottom);
-    volumeAxisRect->setMargins(QMargins(0, 0, 0, 0));
+    
     // create two bar plottables, for positive (green) and negative (red) volume bars:
-    QCPBars *volumePos = new QCPBars(volumeAxisRect->axis(QCPAxis::atBottom), volumeAxisRect->axis(QCPAxis::atLeft));
-    QCPBars *volumeNeg = new QCPBars(volumeAxisRect->axis(QCPAxis::atBottom), volumeAxisRect->axis(QCPAxis::atLeft));
+    QCPBars *volumePos = new QCPBars(ui->volumePlot->xAxis, ui->volumePlot->yAxis);
+    QCPBars *volumeNeg = new QCPBars(ui->volumePlot->xAxis, ui->volumePlot->yAxis);
 
     for (int i=0; i < timeData.count(); ++i)
     {
@@ -106,33 +97,38 @@ void QuantPage::updateChart()
     }
 
     ui->customPlot->setAutoAddPlottableToLegend(false);
-    ui->customPlot->addPlottable(volumePos);
-    ui->customPlot->addPlottable(volumeNeg);
+    ui->volumePlot->addPlottable(volumePos);
+    ui->volumePlot->addPlottable(volumeNeg);
     volumePos->setWidth(binSize * 0.8);
-    volumePos->setPen(Qt::NoPen);
-    volumePos->setBrush(QColor(72, 191, 66));
+    QPen pen;
+    pen.setWidthF(1.2);
+    pen.setColor(QColor(72, 191, 66));
+    volumePos->setPen(pen);
+    volumePos->setBrush(QColor(72, 191, 66, 20));
     volumeNeg->setWidth(binSize * 0.8);
-    volumeNeg->setPen(Qt::NoPen);
-    volumeNeg->setBrush(QColor(203, 19, 19));
+    pen.setColor(QColor(201, 19, 19));
+    volumeNeg->setPen(pen);
+    volumeNeg->setBrush(QColor(203, 19, 19, 20));
   
-    // interconnect x axis ranges of main and bottom axis rects:
-    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), volumeAxisRect->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis, SLOT(setRange(QCPRange)));
     // configure axes of both main and bottom axis rect:
-    volumeAxisRect->axis(QCPAxis::atBottom)->setAutoTickStep(false);
-    volumeAxisRect->axis(QCPAxis::atBottom)->setTickStep(3600 * 6); // 6 hr tickstep
-    volumeAxisRect->axis(QCPAxis::atBottom)->setTickLabelType(QCPAxis::ltDateTime);
-    volumeAxisRect->axis(QCPAxis::atBottom)->setDateTimeSpec(Qt::UTC);
-    volumeAxisRect->axis(QCPAxis::atBottom)->setDateTimeFormat("dd. MMM hh:mm");
-    volumeAxisRect->axis(QCPAxis::atBottom)->setTickLabelRotation(15);
-    volumeAxisRect->axis(QCPAxis::atBottom)->setTickLabelColor(QColor(137, 140, 146));
-    volumeAxisRect->axis(QCPAxis::atLeft)->setTickLabelColor(QColor(137, 140, 146));
-    volumeAxisRect->axis(QCPAxis::atLeft)->setAutoTickCount(3);
+    ui->volumePlot->xAxis->setAutoTickStep(false);
+    ui->volumePlot->xAxis->setTickStep(3600 * 24); // 24 hr tickstep
+    ui->volumePlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    ui->volumePlot->xAxis->setDateTimeSpec(Qt::UTC);
+    ui->volumePlot->xAxis->setDateTimeFormat("dd. MMM hh:mm");
+    ui->volumePlot->xAxis->setTickLabelRotation(15);
+    ui->volumePlot->xAxis->setTickLabelColor(QColor(137, 140, 146));
+    ui->volumePlot->yAxis->setTickLabelColor(QColor(137, 140, 146));
+    ui->volumePlot->yAxis->setAutoTickStep(false);
+    ui->volumePlot->yAxis->setTickStep(3000);
+    ui->volumePlot->rescaleAxes();
+    ui->volumePlot->yAxis->grid()->setSubGridVisible(false);
+
     ui->customPlot->xAxis->setBasePen(Qt::NoPen);
     ui->customPlot->xAxis->setTickLabels(false);
     ui->customPlot->xAxis->setTicks(false); // only want vertical grid in main axis rect, so hide xAxis backbone, ticks, and labels
     ui->customPlot->xAxis->setAutoTickStep(false);
-    ui->customPlot->xAxis->setTickStep(3600 * 6); // 6 hr tickstep
+    ui->customPlot->xAxis->setTickStep(3600 * 24); // 6 hr tickstep
     ui->customPlot->rescaleAxes();
     //  ui->customPlot->xAxis->scaleRange(1.025, ui->customPlot->xAxis->range().center());
     ui->customPlot->yAxis->scaleRange(1.1, ui->customPlot->yAxis->range().center());
@@ -142,7 +138,6 @@ void QuantPage::updateChart()
     // make axis rects' left side line up:
     QCPMarginGroup *group = new QCPMarginGroup(ui->customPlot);
     ui->customPlot->axisRect()->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-    volumeAxisRect->setMarginGroup(QCP::msLeft|QCP::msRight, group);
 
     QLinearGradient plotGradient;
     plotGradient.setStart(0, 0);
@@ -151,12 +146,20 @@ void QuantPage::updateChart()
     plotGradient.setColorAt(1, QColor(0, 0, 0));
     ui->customPlot->setBackground(plotGradient);
 
+    QLinearGradient volumePlotGradient;
+    volumePlotGradient.setStart(0, 0);
+    volumePlotGradient.setFinalStop(0, 150);
+    volumePlotGradient.setColorAt(0, QColor(1, 1, 1));
+    volumePlotGradient.setColorAt(1, QColor(0, 0, 0));
+    ui->volumePlot->setBackground(volumePlotGradient);
+
     ui->customPlot->xAxis->grid()->setVisible(false);
     ui->customPlot->yAxis->grid()->setVisible(false);
     ui->customPlot->xAxis->grid()->setSubGridVisible(false);
     ui->customPlot->yAxis->grid()->setSubGridVisible(false);
 
     ui->customPlot->replot();
+    ui->volumePlot->replot();
 }
 
 void QuantPage::updateDepthChart()
