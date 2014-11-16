@@ -324,9 +324,9 @@ Value sendtoaddress(const Array& params, bool fHelp)
         throw runtime_error("Narration must be 24 characters or less.");
     
     // Wallet comments
-    if (params.size() > 2 && params[2].type() != null_type && !params[3].get_str().empty())
+    if (params.size() > 2 && params[2].type() != null_type && !params[2].get_str().empty())
         wtx.mapValue["comment"] = params[2].get_str();
-    if (params.size() > 3 && params[3].type() != null_type && !params[4].get_str().empty())
+    if (params.size() > 3 && params[3].type() != null_type && !params[3].get_str().empty())
         wtx.mapValue["to"]      = params[3].get_str();
 
     if (pwalletMain->IsLocked())
