@@ -348,8 +348,13 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     if (!VerifySignature(txPrev, tx, 0, 0))
         return tx.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString().c_str()));
 
+    uint256 txHash = txPrev.GetHash();
+    printf("CheckProofOfStake txPrev: %s\n", txHash.ToString().c_str());
+    printf("CheckProofOfStake txin.prevout depth in main chain: %d\n", txindex.GetDepthInMainChain());
+    txindex.pos.print();
+
     // Get the block hash
-    CTransaction txF;
+    /*CTransaction txF;
     uint256 hashBlockT = 0;
     uint256 txHash = txPrev.GetHash();
 
@@ -365,13 +370,34 @@ bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hash
     // Read block header
     CBlock block;
     //if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+    bool isOrphan = false;
     if(mapBlockIndex.find(hashBlockT) == mapBlockIndex.end())
     {
-	string errs = "CheckProofOfStake(): block not indexed: " + hashBlockT.ToString() + " tx: " + txPrev.GetHash().ToString();
-	return fDebug? error(errs.c_str()) : false;
+        // check orphans?
+        if(mapOrphanBlocks.find(hashBlockT) == mapOrphanBlocks.end())
+        {
+	    string errs = "CheckProofOfStake(): block not indexed: " + hashBlockT.ToString() + " tx: " + txPrev.GetHash().ToString();
+	    return fDebug? error(errs.c_str()) : false;
+        }
+        else
+            isOrphan = true;
     }
 
-    if(!block.ReadFromDisk(mapBlockIndex[hashBlockT], true))
+    if(!isOrphan)
+    {
+        if(!block.ReadFromDisk(mapBlockIndex[hashBlockT], true))
+            return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
+    }
+    else
+    {
+        block = *(mapOrphanBlocks[hashBlockT]);
+       //if(!block.ReadFromDisk(mapOrphanBlocks[hashBlockT], true))
+       //     return fDebug? error("CheckProofOfStake() : read orphan block failed") : false; // unable to read block of previous transaction
+    }*/
+
+    // Read block header
+    CBlock block;
+    if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, true))
         return fDebug? error("CheckProofOfStake() : read block failed") : false; // unable to read block of previous transaction
 
     if (!CheckStakeKernelHash(nBits, block, txindex.pos.nTxPos - txindex.pos.nBlockPos, txPrev, txin.prevout, tx.nTime, hashProofOfStake, targetProofOfStake, fDebug))

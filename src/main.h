@@ -12,8 +12,8 @@
 #include "scrypt.h"
 #include "sph_blake.h"
 
-#include <boost/unordered_map.hpp>
 #include <list>
+#include <map>
 
 class CWallet;
 class CBlock;
@@ -66,7 +66,7 @@ inline int64_t FutureDrift(int64_t nTime) { return nTime + 6 * 60; } // up to 6 
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
-extern boost::unordered_map<uint256, CBlockIndex*, Uint256Hasher, Uint256Hasher> mapBlockIndex;
+extern std::map<uint256, CBlockIndex*> mapBlockIndex;
 extern std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 extern CBlockIndex* pindexGenesisBlock;
 extern unsigned int nTargetSpacing;
@@ -88,7 +88,7 @@ extern int64_t nTimeBestReceived;
 extern CCriticalSection cs_setpwalletRegistered;
 extern std::set<CWallet*> setpwalletRegistered;
 extern unsigned char pchMessageStart[4];
-extern boost::unordered_map<uint256, CBlock*, Uint256Hasher, Uint256Hasher> mapOrphanBlocks;
+extern std::map<uint256, CBlock*> mapOrphanBlocks;
 
 // Settings
 extern int64_t nTransactionFee;
@@ -1476,7 +1476,7 @@ public:
 
     explicit CBlockLocator(uint256 hashBlock)
     {
-        boost::unordered_map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+        std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
         if (mi != mapBlockIndex.end())
             Set((*mi).second);
     }
@@ -1527,7 +1527,7 @@ public:
         int nStep = 1;
         BOOST_FOREACH(const uint256& hash, vHave)
         {
-            boost::unordered_map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
@@ -1546,7 +1546,7 @@ public:
         // Find the first block the caller has in the main chain
         BOOST_FOREACH(const uint256& hash, vHave)
         {
-            boost::unordered_map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
@@ -1562,7 +1562,7 @@ public:
         // Find the first block the caller has in the main chain
         BOOST_FOREACH(const uint256& hash, vHave)
         {
-            boost::unordered_map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
+            std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hash);
             if (mi != mapBlockIndex.end())
             {
                 CBlockIndex* pindex = (*mi).second;
