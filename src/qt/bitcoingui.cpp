@@ -286,6 +286,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QByteArray stateArray = settings.value("mainWindowState", "").toByteArray();
     restoreState(stateArray);
 
+    mainToolbar->show();
+
     gotoOverviewPage();
 }
 
@@ -501,7 +503,7 @@ void BitcoinGUI::createToolBars()
     spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     mainToolbar->addWidget(spacer);
 
-    mainToolbar->setContextMenuPolicy(Qt::NoContextMenu);
+    mainToolbar->setContextMenuPolicy(Qt::PreventContextMenu);
     mainToolbarOrientation(mainToolbar->orientation());
 }
 
