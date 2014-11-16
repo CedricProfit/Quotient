@@ -2,6 +2,9 @@
 #define QWIREPAGE_H
 
 #include <QWidget>
+#include <QNetworkProxyFactory>
+#include <QWebSettings>
+#include <QWebView>
 
 namespace Ui {
     class QWirePage;
@@ -14,9 +17,11 @@ class QWirePage : public QWidget
 public:
     explicit QWirePage(QWidget *parent = 0);
     ~QWirePage();
+    void loadVideoFeed();
 
 private:
     Ui::QWirePage *ui;
+    QWebView *webView;
 
 };
 

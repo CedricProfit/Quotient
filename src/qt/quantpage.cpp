@@ -393,7 +393,7 @@ void QuantPage::trexMktDataReplyFinished()
     if(fShutdown)
 	return;
 
-    qDebug() << "trexMktDataReplyFinished()";
+    //qDebug() << "trexMktDataReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
@@ -441,7 +441,7 @@ void QuantPage::eeMktHistoryReplyFinished()
     if(fShutdown)
 	return;
 
-    qDebug() << "eeMktHistoryReplyFinished()";
+    //qDebug() << "eeMktHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
@@ -481,7 +481,7 @@ void QuantPage::trexMktHistoryReplyFinished()
 	return;
 
     QString trexFormat = "yyyy-MM-ddThh:mm:ss.z";
-    qDebug() << "trexMktHistoryReplyFinished()";
+    //qDebug() << "trexMktHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
@@ -525,7 +525,7 @@ void QuantPage::trexHistoryReplyFinished()
     if(fShutdown)
 	return;
 
-    qDebug() << "trexHistoryReplyFinished()";
+    //qDebug() << "trexHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
@@ -630,7 +630,7 @@ void QuantPage::eeHistoryReplyFinished()
 
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
 
-    qDebug() << "eeHistoryReplyFinished()";
+    //qDebug() << "eeHistoryReplyFinished()";
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);

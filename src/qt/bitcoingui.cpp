@@ -999,6 +999,7 @@ void BitcoinGUI::gotoProfitExplorerPage()
 {
     profitExplorerPageAction->setChecked(true);
     centralWidget->setCurrentWidget(profitExplorerPage);
+    profitExplorerPage->loadStakeChart(false);
 
     exportAction->setEnabled(false);
     disconnect(exportAction, SIGNAL(triggered()), 0, 0);
