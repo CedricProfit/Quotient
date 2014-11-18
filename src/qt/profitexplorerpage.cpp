@@ -13,6 +13,7 @@
 #include <QPainter>
 
 QVector<double> nTimeData(0), myStakeData(0), netStakeData(0), difficultyData(0);
+QVector<double> velTimeData(0), velAmountData(0);
 
 ProfitExplorerPage::ProfitExplorerPage(QWidget *parent) :
     QWidget(parent),
@@ -49,6 +50,8 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
     netStakeData.clear();
     myStakeData.clear();
     difficultyData.clear();
+    velTimeData.clear();
+    velAmountData.clear();
 
     // go back this many blocks max
     int max = ui->spinBox->value();
@@ -70,6 +73,14 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
 	    block.ReadFromDisk(pindex, true);
 	    if(block.IsProofOfStake()) // this should always be true here
 	    {
+		velTimeData.append(pindex->nTime);
+		double blockOutAmount = 0;
+		for(int j=0; j<block.vtx.size(); j++)
+		{
+		    blockOutAmount += block.vtx[j].GetValueOut() / COIN;
+		}
+		velAmountData.append(blockOutAmount);
+
 		difficultyData.append(GetDifficulty(pindex));
 		if(pwalletMain->IsMine(block.vtx[1]))
 		{
@@ -199,6 +210,51 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
     //ui->difficultyPlot->xAxis->setLabel("Stake Block Generation Time");
 
     ui->difficultyPlot->replot();
+
+
+    ui->velocityPlot->clearPlottables();
+    ui->velocityPlot->clearGraphs();
+    ui->velocityPlot->clearItems();
+    ui->velocityPlot->addGraph();
+    ui->velocityPlot->graph(0)->setPen(QPen(QColor(76, 255, 0))); // line color green for first graph
+    ui->velocityPlot->graph(0)->setBrush(QBrush(QColor(76, 255, 0, 20))); // first graph will be filled with translucent green
+    
+    ui->velocityPlot->graph(0)->setData(velTimeData, velAmountData);
+    ui->velocityPlot->xAxis->setRangeLower(velTimeData.first());
+    ui->velocityPlot->xAxis->setRangeUpper(velTimeData.last());
+
+    QLinearGradient velPlotGradient;
+    velPlotGradient.setStart(0, 0);
+    velPlotGradient.setFinalStop(0, 150);
+    velPlotGradient.setColorAt(0, QColor(10, 10, 10));
+    velPlotGradient.setColorAt(1, QColor(0, 0, 0));
+    ui->velocityPlot->setBackground(velPlotGradient);
+
+    ui->velocityPlot->xAxis->grid()->setVisible(false);
+    ui->velocityPlot->yAxis->grid()->setVisible(false);
+    ui->velocityPlot->xAxis->grid()->setSubGridVisible(false);
+    ui->velocityPlot->yAxis->grid()->setSubGridVisible(false);
+
+    ui->velocityPlot->xAxis->setAutoTickStep(false);
+    ui->velocityPlot->xAxis->setTickStep(3600 * 24); // 24 hr tickstep
+    ui->velocityPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
+    ui->velocityPlot->xAxis->setDateTimeSpec(Qt::UTC);
+    ui->velocityPlot->xAxis->setDateTimeFormat("dd. MMM hh:mm");
+    ui->velocityPlot->xAxis->setTickLabelRotation(15);
+
+    ui->velocityPlot->xAxis->setTickLabelColor(QColor(137, 140, 146));
+    ui->velocityPlot->yAxis->setTickLabelColor(QColor(137, 140, 146));
+
+    ui->velocityPlot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+    ui->velocityPlot->yAxis->setTickStep(1000);
+    ui->velocityPlot->xAxis->setLabelColor(QColor(137, 140, 146));
+    ui->velocityPlot->yAxis->setLabelColor(QColor(137, 140, 146));
+    ui->velocityPlot->yAxis->setLabel("$XQN");
+    ui->velocityPlot->xAxis->setTickLabels(false);
+    ui->velocityPlot->xAxis->setLabel("Financial Velocity");
+
+    ui->velocityPlot->rescaleAxes();
+    ui->velocityPlot->replot();
 
 }
 
