@@ -51,7 +51,7 @@ QuantPage::QuantPage(QWidget *parent) :
 
 void QuantPage::updateTimer_timeout()
 {
-    if(fShutdown || isClosing)
+    if(fShutdown)
 	return;
 
     if(ui->checkBox->isChecked())
@@ -60,7 +60,7 @@ void QuantPage::updateTimer_timeout()
 
 void QuantPage::updateChart()
 {
-    if(fShutdown || isClosing)
+    if(fShutdown)
         return;
 
     ui->customPlot->clearPlottables();
