@@ -21,6 +21,11 @@
 using namespace std;
 using namespace boost;
 
+extern std::map<uint64_t, CNewsFeedItem> mapNewsByTime;
+extern std::map<uint64_t, CIndexFeedItem> mapIndexesByTime;
+extern CCriticalSection cs_mapNews;
+extern CCriticalSection cs_mapIndexes;
+
 //
 // Global state
 //
@@ -2900,6 +2905,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 Checkpoints::checkpointMessage.RelayTo(pfrom);
         }
 
+        // Relay qdex feed
+        printf("requesting qdexinv from connected node\n");
+        pfrom->PushMessage("qdexinv");
+
         pfrom->fSuccessfullyConnected = true;
 
         printf("receive version message: version %d, blocks=%d, us=%s, them=%s, peer=%s\n", pfrom->nVersion, pfrom->nStartingHeight, addrMe.ToString().c_str(), addrFrom.ToString().c_str(), pfrom->addr.ToString().c_str());
@@ -3520,6 +3529,31 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 	        pfrom->Misbehaving(10);
 	    }
         }
+    }
+
+    else if (strCommand == "qdexinv")
+    {
+	printf("qdexinv message received, sending qdex inventory\n");
+	// node requested last 7 days of news and index items
+	BOOST_REVERSE_FOREACH(const PAIRTYPE(uint64_t, CNewsFeedItem)& p, mapNewsByTime)
+	{
+            // send last 7 days of news items
+	    if(p.first >= (GetAdjustedTime() - (7 * 24 * 60 * 60)))
+	    {
+	        if(p.second.CheckSignature())
+		    p.second.RelayTo(pfrom);
+	    }
+	}
+
+        BOOST_REVERSE_FOREACH(const PAIRTYPE(uint64_t, CIndexFeedItem)& p, mapIndexesByTime)
+	{
+            // send last 7 days of indexes
+	    if(p.first >= (GetAdjustedTime() - (7 * 24 * 60 * 60)))
+	    {
+	        if(p.second.CheckSignature())
+		    p.second.RelayTo(pfrom);
+	    }
+	}
     }
 
 
