@@ -11,6 +11,7 @@
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include "smessage.h"
+#include "qdex.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -906,6 +907,10 @@ bool AppInit2()
     
     // ********************************************************* Step 11: start node
     
+    // Load qdex feed data
+    if(!LoadFeeds())
+        printf("Couldn't load QDEX data feeds from disk.\n");    
+
     if (!CheckDiskSpace())
         return false;
 

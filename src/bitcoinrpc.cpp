@@ -307,6 +307,9 @@ static const CRPCCommand vRPCCommands[] =
     { "resendtx",               &resendtx,               false,  true},
     { "makekeypair",            &makekeypair,            false,  true},
     { "sendalert",              &sendalert,              false,  false},
+
+    { "sendnewsfeed",           &sendnewsfeed,           false,  false},
+    { "sendindexfeed",          &sendindexfeed,          false,  false},
     
     { "getnewstealthaddress",   &getnewstealthaddress,   false,  false},
     { "liststealthaddresses",   &liststealthaddresses,   false,  false},
@@ -1264,6 +1267,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "keypoolrefill"          && n > 0) ConvertTo<int64_t>(params[0]);
     
     if (strMethod == "sendtostealthaddress"   && n > 1) ConvertTo<double>(params[1]);
+
+    if (strMethod == "sendindexfeed"	      && n > 5) ConvertTo<double>(params[5]);
 
     return params;
 }

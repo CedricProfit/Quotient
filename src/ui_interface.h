@@ -91,6 +91,9 @@ public:
      * @note called with lock cs_mapAlerts held.
      */
     boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
+
+    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyIndexFeedChanged;
+    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyNewsFeedChanged;
 };
 
 extern CClientUIInterface uiInterface;

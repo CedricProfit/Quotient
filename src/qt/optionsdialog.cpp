@@ -12,6 +12,7 @@
 #include <QMessageBox>
 #include <QRegExp>
 #include <QRegExpValidator>
+#include <QSpinBox>
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
     QDialog(parent),
@@ -81,6 +82,8 @@ OptionsDialog::OptionsDialog(QWidget *parent) :
     }
 
     ui->unit->setModel(new BitcoinUnits(this));
+
+    ui->opacitySpinBox->setValue(static_cast<int>(windowOpacity()));
 
     /* Widget-to-option mapper */
     mapper = new MonitoredDataMapper(this);

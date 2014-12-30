@@ -111,7 +111,7 @@ border: 1px solid gray;\
 }"
 #define HORIZONTAL_TOOLBAR_STYLESHEET "QToolBar {\
     border: 1px solid #393838;\
-    background: 1px solid #302F2F;\
+    background: 1px solid #303030;\
     font-weight: bold;\
 }"
 
@@ -150,7 +150,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     setWindowOpacity(qreal(95)/100);
     setObjectName("quotientFN");
-    setStyleSheet("#quotientFN { background-color: #383838; } QToolTip { border: 1px solid black; background-color: #44CA0C; color: black; }");
+    setStyleSheet("#quotientFN { background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4, radius: 1.35, stop: 0 #dedede, stop: 1 #383838);  } QToolTip { border: 1px solid black; background-color: #44CA0C; color: black; }");
 
     // Accept D&D of URIs
     setAcceptDrops(true);
@@ -160,9 +160,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     // Create application menu bar
     createMenuBar();
-
-    // Create the toolbars
-    createToolBars();
 
     // Create the tray icon (or setup the dock icon)
     createTrayIcon();
@@ -187,6 +184,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     consolePage = new TabbedConsolePage(this);
     qwirePage = new QWirePage(this);
+    qwirePage->setObjectName("qwirePage");
+    qwirePage->setStyleSheet("#qwirePage { background-color: #000000; }");
 
     quantPage = new QuantPage(this);
     profitExplorerPage = new ProfitExplorerPage(this);
@@ -224,6 +223,15 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     labelConnectionsIcon = new QLabel();
     labelBlocksIcon = new QLabel();
     frameBlocksLayout->addStretch();
+
+    QLabel *opacityLabel = new QLabel("Opacity:");
+    opacityLabel->setObjectName("opacityLabel");
+    opacityLabel->setStyleSheet("#opacityLabel { color: #cccccc; }");
+    QSpinBox *opacitySpinBox = new QSpinBox();
+    opacitySpinBox->setRange(40, 100);
+
+    frameBlocksLayout->addWidget(opacityLabel);
+    frameBlocksLayout->addWidget(opacitySpinBox);
     frameBlocksLayout->addWidget(labelEncryptionIcon);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelStakingIcon);
@@ -261,9 +269,9 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
-    //statusBar()->addPermanentWidget(frameBlocks);
+    statusBar()->addPermanentWidget(frameBlocks);
 
-    mainToolbar->addWidget(frameBlocks);
+    //mainToolbar->addWidget(frameBlocks);
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
 
@@ -286,14 +294,30 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     QByteArray stateArray = settings.value("mainWindowState", "").toByteArray();
     restoreState(stateArray);
 
+    setWindowOpacity(qreal(settings.value("winOpacity", 95).toInt())/100);
+
+    opacitySpinBox->setValue(static_cast<int>(windowOpacity() * 100));
+    connect(opacitySpinBox, SIGNAL(valueChanged(int)), this, SLOT(on_opacitySpinBox_valueChanged(int)));
+
+    // Create the toolbars
+    createToolBars();
     mainToolbar->show();
 
     gotoOverviewPage();
 }
 
+void BitcoinGUI::on_opacitySpinBox_valueChanged(int i)
+{
+    // update the window opacity
+    if(i > 40)
+        setWindowOpacity(qreal(i)/100);
+}
+
+
 BitcoinGUI::~BitcoinGUI()
 {
     QSettings settings;
+    settings.setValue("winOpacity", static_cast<int>(windowOpacity() * 100));
     QByteArray stateArray = saveState();
     settings.setValue("mainWindowState", stateArray);
 
@@ -473,19 +497,24 @@ void BitcoinGUI::createToolBars()
 {
     mainIcon = new QLabel (this);
     mainIcon->setPixmap(QPixmap(":images/quotient-vertical"));
+    mainIcon->setMaximumSize(80,80);
+    mainIcon->setScaledContents(true);
     mainIcon->show();
 
     mainToolbar = addToolBar(tr("Tabs toolbar"));
-    addToolBar(Qt::LeftToolBarArea,mainToolbar);
+    //addToolBar(Qt::LeftToolBarArea,mainToolbar);
+    addToolBar(Qt::TopToolBarArea,mainToolbar);
     mainToolbar->setObjectName("main");
-    mainToolbar->setOrientation(Qt::Vertical);
+    //mainToolbar->setOrientation(Qt::Vertical);
+    mainToolbar->setOrientation(Qt::Horizontal);
     mainToolbar->setMovable(false);
-    mainToolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    //mainToolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    mainToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     mainToolbar->addWidget(mainIcon);
 
-    QWidget* topspacer = new QWidget();
-    topspacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    mainToolbar->addWidget(topspacer);
+    //QWidget* topspacer = new QWidget();
+    //topspacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    //mainToolbar->addWidget(topspacer);
 
     mainToolbar->addAction(overviewAction);
     mainToolbar->addAction(sendCoinsAction);
@@ -499,9 +528,9 @@ void BitcoinGUI::createToolBars()
     mainToolbar->addAction(messageAction);
     mainToolbar->addAction(exportAction);
     
-    QWidget* spacer = new QWidget();
-    spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    mainToolbar->addWidget(spacer);
+    //QWidget* spacer = new QWidget();
+    //spacer->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    //mainToolbar->addWidget(spacer);
 
     mainToolbar->setContextMenuPolicy(Qt::PreventContextMenu);
     mainToolbarOrientation(mainToolbar->orientation());
@@ -682,12 +711,12 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
-	statusBar()->setVisible(false);
+	//statusBar()->setVisible(false);
 
         return;
     }
 
-    bool fShowStatusBar = false;
+    //bool fShowStatusBar = false;
     QString strStatusBarWarnings = clientModel->getStatusBarWarnings();
     QString tooltip;
 
@@ -707,14 +736,14 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         }
 
         tooltip = tr("Downloaded %1 of %2 blocks of transaction history (%3% done).").arg(count).arg(nTotalBlocks).arg(nPercentageDone, 0, 'f', 2);
-	fShowStatusBar = true;
+	//fShowStatusBar = true;
     }
     else
     {
         if (strStatusBarWarnings.isEmpty())
             progressBarLabel->setVisible(false);
-        else
-	    fShowStatusBar = true;
+        //else
+	    //fShowStatusBar = true;
 
         progressBar->setVisible(false);
         tooltip = tr("Downloaded %1 blocks of transaction history.").arg(count);
@@ -726,7 +755,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         progressBarLabel->setText(strStatusBarWarnings);
         progressBarLabel->setVisible(true);
         progressBar->setVisible(false);
-        fShowStatusBar = true;
+        //fShowStatusBar = true;
     }
 
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
@@ -762,7 +791,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
         overviewPage->showOutOfSyncWarning(false);
-        fShowStatusBar = false;
+        //fShowStatusBar = false;
     }
     else
     {
@@ -771,7 +800,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         syncIconMovie->start();
 
         overviewPage->showOutOfSyncWarning(true);
-        fShowStatusBar = true;
+        //fShowStatusBar = true;
     }
 
     if(!text.isEmpty())
@@ -786,7 +815,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     labelBlocksIcon->setToolTip(tooltip);
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
-    statusBar()->setVisible(fShowStatusBar);
+    //statusBar()->setVisible(fShowStatusBar);
 }
 
 void BitcoinGUI::error(const QString &title, const QString &message, bool modal)
@@ -982,6 +1011,7 @@ void BitcoinGUI::gotoConsolePage()
 void BitcoinGUI::gotoQWirePage()
 {
     qwirePageAction->setChecked(true);
+    qwirePage->loadFeed();
     centralWidget->setCurrentWidget(qwirePage);
 
     exportAction->setEnabled(false);
@@ -1070,7 +1100,8 @@ void BitcoinGUI::mainToolbarOrientation(Qt::Orientation orientation)
 {
     if(orientation == Qt::Horizontal)
     {
-            messageAction->setIconText(tr("&Messages"));
+        mainToolbar->setStyleSheet(HORIZONTAL_TOOLBAR_STYLESHEET);
+        messageAction->setIconText(tr("&Messages"));
     }
     else
     {

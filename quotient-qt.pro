@@ -255,7 +255,9 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/qcustomplot.h \
     src/qt/quantpage.h \
     src/qt/profitexplorerpage.h \
-    src/qt/tabbedconsolepage.h
+    src/qt/tabbedconsolepage.h \
+    src/qdex.h \
+    src/qt/flowlayout.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/transactiontablemodel.cpp \
@@ -340,7 +342,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/qcustomplot.cpp \
     src/qt/quantpage.cpp \
     src/qt/profitexplorerpage.cpp \
-    src/qt/tabbedconsolepage.cpp
+    src/qt/tabbedconsolepage.cpp \
+    src/qdex.cpp \
+    src/qt/flowlayout.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc \

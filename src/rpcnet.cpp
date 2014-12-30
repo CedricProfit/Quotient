@@ -8,6 +8,7 @@
 #include "wallet.h"
 #include "db.h"
 #include "walletdb.h"
+#include "qdex.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -66,6 +67,123 @@ Value getpeerinfo(const Array& params, bool fHelp)
     }
 
     return ret;
+}
+
+Value sendnewsfeed(const Array& params, bool fHelp)
+{
+    if(fHelp || params.size() < 5)
+	throw runtime_error(
+	    "sendnewsfeed <privatekey> <title> <summary> <link> <source> [videocode]\n"
+	    "<privatekey> is hex string of newsfeed master private key\n"
+	    "<title> is the title of the news item or video\n"
+	    "<summary> is a brief summary of the news item\n"
+	    "<link> is a url to the news item\n"
+	    "<source> is the source or site where the news is from\n"
+	    "[videocode] if a video, include the YouTube video id\n");
+
+/*int nVersion;
+    int64_t nRelayUntil;
+    int64_t nTimestamp;
+    bool bIsVideo;
+    std::string strTitle;
+    std::string strSummary;
+    std::string strVideoCode;
+    std::string strLink;
+    std::string strSource;*/
+
+    CNewsFeedItem newsItem;
+    CKey key;
+
+    newsItem.nRelayUntil = GetAdjustedTime() + 30*24*60*60;
+    newsItem.nTimestamp = GetAdjustedTime();
+    if(params.size() > 5)
+    {
+	newsItem.bIsVideo = true;
+	newsItem.strVideoCode = params[5].get_str();
+    }
+
+    newsItem.strTitle = params[1].get_str();
+    newsItem.strSummary = params[2].get_str();
+    newsItem.strLink = params[3].get_str();
+    newsItem.strSource = params[4].get_str();
+
+    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
+    sMsg << (CUnsignedNewsFeedItem)newsItem;
+    newsItem.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
+
+    vector<unsigned char> vchPrivKey = ParseHex(params[0].get_str());
+    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+    if (!key.Sign(Hash(newsItem.vchMsg.begin(), newsItem.vchMsg.end()), newsItem.vchSig))
+        throw runtime_error(
+            "Unable to sign news item, check private key?\n");  
+    if(!newsItem.ProcessNewsFeedItem()) 
+        throw runtime_error(
+            "Failed to process news item.\n");
+    // Relay news item
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            newsItem.RelayTo(pnode);
+    }
+
+    Object result;
+    result.push_back(Pair("strTitle", newsItem.strTitle));
+    result.push_back(Pair("nTimestamp", newsItem.nTimestamp));
+    result.push_back(Pair("nRelayUntil", newsItem.nRelayUntil));
+    return result;
+}
+
+Value sendindexfeed(const Array& params, bool fHelp)
+{
+    if(fHelp || params.size() < 6)
+	throw runtime_error(
+	    "sendindexfeed <privatekey> <code> <name> <link> <source> <value>\n"
+	    "<privatekey> is hex string of newsfeed master private key\n"
+	    "<code> is the ticker symbol of the index\n"
+	    "<name> is the name of the index\n"
+	    "<link> is a url to the news item\n"
+	    "<source> is the source or site where the news is from\n"
+	    "<value> is the value of the index.\n");
+
+//code,name,source,link,value
+
+    CIndexFeedItem indexItem;
+    CKey key;
+
+    indexItem.nRelayUntil = GetAdjustedTime() + 30*24*60*60;
+    indexItem.nTimestamp = GetAdjustedTime();
+    
+    indexItem.strCode = params[1].get_str();
+    indexItem.strName = params[2].get_str();
+    indexItem.strLink = params[3].get_str();
+    indexItem.strSource = params[4].get_str();
+
+    indexItem.nIndexValue = AmountFromValue(params[5]);
+
+    CDataStream sMsg(SER_NETWORK, PROTOCOL_VERSION);
+    sMsg << (CUnsignedIndexFeedItem)indexItem;
+    indexItem.vchMsg = vector<unsigned char>(sMsg.begin(), sMsg.end());
+
+    vector<unsigned char> vchPrivKey = ParseHex(params[0].get_str());
+    key.SetPrivKey(CPrivKey(vchPrivKey.begin(), vchPrivKey.end())); // if key is not correct openssl may crash
+    if (!key.Sign(Hash(indexItem.vchMsg.begin(), indexItem.vchMsg.end()), indexItem.vchSig))
+        throw runtime_error(
+            "Unable to sign index item, check private key?\n");  
+    if(!indexItem.ProcessIndexFeedItem()) 
+        throw runtime_error(
+            "Failed to process index item.\n");
+    // Relay news item
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes)
+            indexItem.RelayTo(pnode);
+    }
+
+    Object result;
+    result.push_back(Pair("strCode", indexItem.strCode));
+    result.push_back(Pair("nTimestamp", indexItem.nTimestamp));
+    result.push_back(Pair("nRelayUntil", indexItem.nRelayUntil));
+    return result;
 }
  
 // ppcoin: send alert.  

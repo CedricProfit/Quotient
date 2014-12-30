@@ -248,6 +248,8 @@ private slots:
 
     void updateWeight();
     void updateStakingIcon();
+
+    void on_opacitySpinBox_valueChanged(int i);
 };
 
 #endif

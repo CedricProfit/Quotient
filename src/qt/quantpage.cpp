@@ -27,6 +27,7 @@
 
 using namespace std;
 
+bool isClosing = false;
 qsreal trexLastPrice = 0;
 
 CCriticalSection cs_markets;
@@ -44,21 +45,22 @@ QuantPage::QuantPage(QWidget *parent) :
     networkManager = new QNetworkAccessManager(this);
     updateMarketData();
     connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateTimer_timeout()));
-    updateTimer.setInterval(120000); // every 2 minutes
+    updateTimer.setInterval(300000); // every 5 minutes
     updateTimer.start();
 }
 
 void QuantPage::updateTimer_timeout()
 {
-    if(fShutdown)
+    if(fShutdown || isClosing)
 	return;
 
-    updateMarketData();
+    if(ui->checkBox->isChecked())
+        updateMarketData();
 }
 
 void QuantPage::updateChart()
 {
-    if(fShutdown)
+    if(fShutdown || isClosing)
         return;
 
     ui->customPlot->clearPlottables();
@@ -69,7 +71,7 @@ void QuantPage::updateChart()
     ui->volumePlot->clearGraphs();
     ui->volumePlot->clearItems();
 
-    double binSize = 900; // bin data in 300 second (5 minute)// 900 second (15 minute) intervals
+    double binSize = 3600; // bin data in 300 second (5 minute)// 900 second (15 minute) intervals // 3600 second (1 hour)
     // create candlestick chart:
     double startTime = timeData[0];
     QCPFinancial *candlesticks = new QCPFinancial(ui->customPlot->xAxis, ui->customPlot->yAxis);
@@ -331,10 +333,17 @@ void QuantPage::updateOrderBook()
     updateDepthChart();
 }
 
+void QuantPage::on_refreshNowButton_clicked()
+{
+    updateMarketData();
+}
+
 void QuantPage::updateMarketData()
 {
     if(fShutdown)
 	return;
+
+    ui->errorLabel->setText("");
 
     LOCK(cs_markets);
     mapSells.clear();
@@ -395,6 +404,22 @@ void QuantPage::trexMktDataReplyFinished()
 
     //qDebug() << "trexMktDataReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "Bittrex Connection Refused");
+	    ui->errorLabel->setText("Bittrex Connection Refused");
+            return;
+        }
+    else
+    {
+        ui->errorLabel->setText("Bittrex API: " + reply->errorString());
+        //QMessageBox::critical(this, "Quant Connection Problem (Bittrex API Market Data)", reply->errorString());
+        return;
+    }
+    }
+
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);
@@ -443,6 +468,23 @@ void QuantPage::eeMktHistoryReplyFinished()
 
     //qDebug() << "eeMktHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "EmpoEx Connection Refused");
+	    ui->errorLabel->setText("EmpoEx Connection Refused");
+            return;
+        }
+    else
+    {
+        //QMessageBox::critical(this, "Quant Connection Problem (EmpoEx API Market History)", reply->errorString());
+	qDebug() << reply->errorString();
+	ui->errorLabel->setText("EmpoEx: " + reply->errorString());
+        return;
+    }
+    }
+
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);
@@ -466,9 +508,13 @@ void QuantPage::eeMktHistoryReplyFinished()
 	    if(type == "Sell")
 		vol = vol * -1;
 
-	    timeData.append(dt.toTime_t());
-	    priceData.append(price);
-	    volumeData.append(vol);
+            QDateTime dtNow = QDateTime::currentDateTimeUtc();
+	    if(dt >= dtNow.addDays(-7))
+	    {
+	        timeData.append(dt.toTime_t());
+	        priceData.append(price);
+	        volumeData.append(vol);
+	    }
         }
     }
 
@@ -483,6 +529,23 @@ void QuantPage::trexMktHistoryReplyFinished()
     QString trexFormat = "yyyy-MM-ddThh:mm:ss.z";
     //qDebug() << "trexMktHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "Bittrex Connection Refused");
+	    ui->errorLabel->setText("Bittrex Connection Refused");
+            return;
+        }
+    else
+    {
+        //QMessageBox::critical(this, "Quant Connection Problem (Bittrex API Market History)", reply->errorString());
+	qDebug() << reply->errorString();
+        ui->errorLabel->setText("Bittrex: " + reply->errorString());
+        return;
+    }
+    }
+
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);
@@ -511,9 +574,13 @@ void QuantPage::trexMktHistoryReplyFinished()
 	    if(orderType == "SELL")
 		vol = vol * -1;
 
-	    timeData.append(dt.toTime_t());
-	    priceData.append(price);
-	    volumeData.append(vol);
+	    QDateTime dtNow = QDateTime::currentDateTimeUtc();
+	    if(dt >= dtNow.addDays(-7))
+	    {
+    	        timeData.append(dt.toTime_t());
+	        priceData.append(price);
+	        volumeData.append(vol);
+	    }
         }
     }
 
@@ -527,6 +594,22 @@ void QuantPage::trexHistoryReplyFinished()
 
     //qDebug() << "trexHistoryReplyFinished()";
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "Bittrex Connection Refused");
+	    ui->errorLabel->setText("Bittrex Connection Refused");
+            return;
+        }
+    else
+    {
+        //QMessageBox::critical(this, "Quant Connection Problem (Bittrex API Order Book)", reply->errorString());
+        ui->errorLabel->setText("Bittrex: " + reply->errorString());
+        return;
+    }
+    }
+
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);
@@ -580,6 +663,22 @@ void QuantPage::eeMktDataReplyFinished()
 	return;
 
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "EmpoEx Connection Refused");
+	    ui->errorLabel->setText("EmpoEx Connection Refused");
+            return;
+        }
+    else
+    {
+        //QMessageBox::critical(this, "Quant Connection Problem (Empo Ex API Market Data)", reply->errorString());
+	ui->errorLabel->setText("EmpoEx: " + reply->errorString());
+        return;
+    }
+    }
+
     QString data = (QString) reply->readAll();
     QScriptEngine engine;
     QScriptValue result = engine.evaluate("value = " + data);
@@ -629,6 +728,21 @@ void QuantPage::eeHistoryReplyFinished()
     // get the market history, split into bids and asks, and update the tables and last price
 
     QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    if (reply->error() !=0)
+    {
+        if (reply->error() == 1 )
+        {
+            //QMessageBox::critical(this, "Quant Connection Problem", "EmpoEx Connection Refused");
+	    ui->errorLabel->setText("EmpoEx Connection Refused");
+            return;
+        }
+    else
+    {
+        //QMessageBox::critical(this, "Quant Connection Problem (EmpoEx API Order Book)", reply->errorString());
+        ui->errorLabel->setText("EmpoEx: " + reply->errorString());
+        return;
+    }
+    }
 
     //qDebug() << "eeHistoryReplyFinished()";
     QString data = (QString) reply->readAll();
@@ -684,10 +798,14 @@ void QuantPage::eeHistoryReplyFinished()
 
 QuantPage::~QuantPage()
 {
+    isClosing = true;
     try
     {
         updateTimer.stop();
-        delete networkManager;
+        //updateTimer = NULL;
+        //delete networkManager;
+        updateTimer.deleteLater();
+        networkManager->deleteLater();
         delete ui;
     }
     catch(std::exception& e)

@@ -25,6 +25,7 @@ public:
     void updateMarketData();
     void updateChart();
     void updateDepthChart();
+    bool isClosing;
 
 private slots:
     virtual void updateTimer_timeout();
@@ -34,6 +35,7 @@ private slots:
     void trexMktDataReplyFinished();
     void trexMktHistoryReplyFinished();
     void eeMktHistoryReplyFinished();
+    void on_refreshNowButton_clicked();
 
 private:
     Ui::QuantPage *ui;
