@@ -25,6 +25,8 @@ private:
 private slots:
     virtual void updateTimer_timeout();
     void on_recomputeButton_clicked();
+    void on_optimizeCheckBox_stateChanged(int state);
+    virtual void blockSize_valueChanged(int value);
 };
 
 #endif // PROFITEXPLORERPAGE_H

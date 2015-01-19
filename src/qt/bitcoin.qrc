@@ -45,6 +45,11 @@
         <file alias="staking_on">res/icons/staking_on.png</file>
         <file alias="smile">res/icons/smile-48.png</file>
         <file alias="sad">res/icons/sad-48.png</file>
+        <file alias="xqm">res/icons/xqm.png</file>
+        <file alias="qwire">res/icons/qwire.png</file>
+        <file alias="quant">res/icons/quant.png</file>
+        <file alias="profitexplorer">res/icons/profitexplorer.png</file>
+        <file alias="messages">res/icons/messages.png</file>
     </qresource>
     <qresource prefix="/images">
         <file alias="about">res/images/about.png</file>

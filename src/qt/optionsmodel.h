@@ -32,7 +32,7 @@ public:
         DetachDatabases,   // bool
         Language,          // QString
         CoinControlFeatures, // bool
-        OptionIDRowCount,
+        OptionIDRowCount
     };
 
     void Init();
@@ -44,6 +44,7 @@ public:
     /* Explicit getters */
     qint64 getTransactionFee();
     qint64 getReserveBalance();
+    qint64 getPreferredBlockSize();
     bool getMinimizeToTray();
     bool getMinimizeOnClose();
     int getDisplayUnit();

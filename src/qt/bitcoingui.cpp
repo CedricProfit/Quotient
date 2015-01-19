@@ -96,23 +96,37 @@ text-align: left;\
 padding-bottom:5px;\
 }\
 QToolButton:pressed {\
-background-color: #4A4949;\
+background-color: #505050;\
 border: 1px solid silver;\
 }\
 QToolButton:checked {\
 color: #4BF802; \
 font-weight: bold; \
-background-color: #777777;\
+background-color: #505050;\
 border: 1px solid silver;\
 }\
 QToolButton:hover {\
-background-color: #4A4949;\
+background-color: #111111;\
 border: 1px solid gray;\
 }"
 #define HORIZONTAL_TOOLBAR_STYLESHEET "QToolBar {\
     border: 1px solid #393838;\
     background: 1px solid #303030;\
     font-weight: bold;\
+}\
+QToolButton:pressed {\
+background-color: #505050;\
+border: 1px solid silver;\
+}\
+QToolButton:checked {\
+color: #4BF802; \
+font-weight: bold; \
+background-color: #505050;\
+border: 1px solid silver;\
+}\
+QToolButton:hover {\
+background-color: #111111;\
+border: 1px solid gray;\
 }"
 
 ActiveLabel::ActiveLabel(const QString & text, QWidget * parent):
@@ -362,7 +376,7 @@ void BitcoinGUI::createActions()
     addressBookAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
     tabGroup->addAction(addressBookAction);
 
-    messageAction = new QAction(QIcon(":/icons/edit"), tr("&Messages"), this);
+    messageAction = new QAction(QIcon(":/icons/messages"), tr("&Messages"), this);
     messageAction->setToolTip(tr("View and Send Encrypted messages"));
     messageAction->setCheckable(true);
     messageAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
@@ -374,19 +388,19 @@ void BitcoinGUI::createActions()
     consolePageAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(consolePageAction);
 
-    qwirePageAction = new QAction(QIcon(":/icons/bitcoin"), tr("&QWire"), this);
+    qwirePageAction = new QAction(QIcon(":/icons/qwire"), tr("&QWire"), this);
     qwirePageAction->setToolTip(tr("QWire crypto newswire"));
     qwirePageAction->setCheckable(true);
     qwirePageAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_8));
     tabGroup->addAction(qwirePageAction);
 
-    quantPageAction = new QAction(QIcon(":/icons/bitcoin"), tr("Q&uant"), this);
+    quantPageAction = new QAction(QIcon(":/icons/quant"), tr("Q&uant"), this);
     quantPageAction->setToolTip(tr("Quant - Aggregated realtime XQN market data"));
     quantPageAction->setCheckable(true);
     quantPageAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_9));
     tabGroup->addAction(quantPageAction);
 
-    profitExplorerPageAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Profit Explorer"), this);
+    profitExplorerPageAction = new QAction(QIcon(":/icons/profitexplorer"), tr("&Profit Explorer"), this);
     profitExplorerPageAction->setToolTip(tr("Staking explorer"));
     profitExplorerPageAction->setCheckable(true);
     tabGroup->addAction(profitExplorerPageAction);

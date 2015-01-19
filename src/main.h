@@ -96,6 +96,7 @@ extern int64_t nReserveBalance;
 extern int64_t nMinimumInputValue;
 extern bool fUseFastIndex;
 extern unsigned int nDerivationMethodIndex;
+extern int64_t nPreferredBlockSize;
 
 extern bool fEnforceCanonical;
 

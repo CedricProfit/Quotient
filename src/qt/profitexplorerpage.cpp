@@ -11,6 +11,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <QSettings>
 
 QVector<double> nTimeData(0), myStakeData(0), netStakeData(0), difficultyData(0);
 QVector<double> velTimeData(0), velAmountData(0);
@@ -20,11 +21,33 @@ ProfitExplorerPage::ProfitExplorerPage(QWidget *parent) :
     ui(new Ui::ProfitExplorerPage)
 {
     ui->setupUi(this);
+
+    // staking settings
+    QSettings settings;
+    nPreferredBlockSize = settings.value("nPreferredBlockSize", (qint64) (618 * COIN)).toLongLong();
+    ui->blockSizeSpinBox->setValue(nPreferredBlockSize / COIN);
+    connect(ui->blockSizeSpinBox, SIGNAL(valueChanged(int)), this, SLOT(blockSize_valueChanged(int)));
+
+    ui->optimizeCheckBox->setChecked( settings.value("bAutoOptimize", false).toBool() );
+
     loadStakeChart(true);
 
     connect(&updateTimer, SIGNAL(timeout()), this, SLOT(updateTimer_timeout()));
     updateTimer.setInterval(123000); // every 123 seconds (approx 2 blocks)
     updateTimer.start();
+}
+
+void ProfitExplorerPage::on_optimizeCheckBox_stateChanged(int state)
+{
+    QSettings settings;
+    settings.setValue("bAutoOptimize", ui->optimizeCheckBox->isChecked());
+}
+
+void ProfitExplorerPage::blockSize_valueChanged(int value)
+{
+    nPreferredBlockSize = value * COIN;
+    QSettings settings;
+    settings.setValue("nPreferredBlockSize", (qint64) nPreferredBlockSize);
 }
 
 void ProfitExplorerPage::updateTimer_timeout()
@@ -57,12 +80,14 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
     int max = ui->spinBox->value();
     int i = 0;
 
-    BOOST_REVERSE_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& b, mapBlockIndex)
+    //BOOST_REVERSE_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& b, mapBlockIndex)
+    //{
+    //    if(i >= max)
+    //        break;
+    CBlockIndex* pindex = pindexBest;
+    while(i < max && pindex != NULL)
     {
-        if(i >= max)
-            break;
-
-        CBlockIndex* pindex = b.second;
+        //CBlockIndex* pindex = b.second;
         if(pindex->IsProofOfStake())
 	{
             nTimeData.append(pindex->nTime);
@@ -95,8 +120,10 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
 	    {
 		myStakeData.append(0); // should never happen
 	    }
+	    i = i + 1;
 	}
-        ++i;
+        pindex = pindex->pprev;
+        //++i;
     }    
 
     if(!firstRun)
@@ -133,8 +160,8 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
     if(ui->networkCheckBox->isChecked())
         ui->customPlot->graph(0)->setData(nTimeData, netStakeData);
     ui->customPlot->graph(1)->setData(nTimeData, myStakeData);
-    ui->customPlot->xAxis->setRangeLower(nTimeData.first());
-    ui->customPlot->xAxis->setRangeUpper(nTimeData.last());
+    //ui->customPlot->xAxis->setRangeLower(nTimeData.first());
+    //ui->customPlot->xAxis->setRangeUpper(nTimeData.last());
 
     QLinearGradient plotGradient;
     plotGradient.setStart(0, 0);
@@ -148,7 +175,7 @@ void ProfitExplorerPage::loadStakeChart(bool firstRun)
     ui->customPlot->xAxis->grid()->setSubGridVisible(false);
     ui->customPlot->yAxis->grid()->setSubGridVisible(false);
 
-    ui->customPlot->xAxis->setAutoTickStep(false);
+    ui->customPlot->xAxis->setAutoTickStep(true);
     ui->customPlot->xAxis->setTickStep(3600 * 24); // 24 hr tickstep
     ui->customPlot->xAxis->setTickLabelType(QCPAxis::ltDateTime);
     ui->customPlot->xAxis->setDateTimeSpec(Qt::UTC);
